@@ -1,16 +1,64 @@
 # -*- coding: utf-8 -*-
 
+import time
+import datetime
 import pygsheets
 import scrapy
 from scrapy import signals
 from ..items import CoinscraperItem
+
+red = {
+	"red": 1.0,
+	"green": 0.0,
+	"blue": 0.0
+}
+
+green = {
+	"red": 0.0,
+	"green": 1.0,
+	"blue": 0.0
+}
 
 class CoinScraper(scrapy.Spider):
 
 	name = 'coinscraper'
 	allowed_domains = ['coinmarketcap.com']
 	start_urls = ['https://coinmarketcap.com/all/views/all/']
+	coins = []
 
+	@classmethod
+	def from_crawler(cls, crawler, *args, **kwargs):
+		spider = super(CoinScraper, cls).from_crawler(crawler, *args, **kwargs)
+		crawler.signals.connect(spider.spider_closed, signal=signals.spider_closed)
+		return spider
+
+	def spider_closed(self, spider):
+		spider.logger.info("Uploading results")
+		gc = pygsheets.authorize()
+		sh = gc.open("CL Data")
+
+		placeholder = sh.sheet1
+
+		wks_name = datetime.datetime.now().strftime("%d/%m/%y")
+		wks = sh.add_worksheet(wks_name, rows=1500, cols=10, src_worksheet=placeholder)
+
+		values = []
+
+		for coin in self.coins:
+			coin_vals = [coin['_id'], 
+						 coin['currency_name'],
+						 coin['symbol'],
+						 coin['market_cap'],
+						 coin['price'],
+						 coin['circulating'],
+						 coin['volume'],
+						 coin['percent_1h'],
+						 coin['percent_24h'],
+						 coin['percent_7d']]
+
+			values.append(coin_vals)
+
+		wks.update_cells('A2', values)
 
 	def parse(self, response):
 
@@ -43,4 +91,4 @@ class CoinScraper(scrapy.Spider):
 			item['percent_24h'] = percent_24h
 			item['percent_7d'] = percent_7d
 
-			yield item
+			self.coins.append(item)
