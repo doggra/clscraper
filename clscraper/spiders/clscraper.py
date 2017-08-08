@@ -5,30 +5,19 @@ import datetime
 import pygsheets
 import scrapy
 from scrapy import signals
-from ..items import CoinscraperItem
+from ..items import CLScraperItem
 
-red = {
-	"red": 1.0,
-	"green": 0.0,
-	"blue": 0.0
-}
 
-green = {
-	"red": 0.0,
-	"green": 1.0,
-	"blue": 0.0
-}
+class CLScraper(scrapy.Spider):
 
-class CoinScraper(scrapy.Spider):
-
-	name = 'coinscraper'
+	name = 'clscraper'
 	allowed_domains = ['coinmarketcap.com']
 	start_urls = ['https://coinmarketcap.com/all/views/all/']
 	coins = []
 
 	@classmethod
 	def from_crawler(cls, crawler, *args, **kwargs):
-		spider = super(CoinScraper, cls).from_crawler(crawler, *args, **kwargs)
+		spider = super(CLScraper, cls).from_crawler(crawler, *args, **kwargs)
 		crawler.signals.connect(spider.spider_closed, signal=signals.spider_closed)
 		return spider
 
@@ -79,7 +68,7 @@ class CoinScraper(scrapy.Spider):
 			percent_24h = row.css('td')[8].css('::text').extract_first().strip()
 			percent_7d = row.css('td')[9].css('::text').extract_first().strip()
 
-			item = CoinscraperItem()
+			item = CLScraperItem()
 			item['_id'] = _id
 			item['currency_name'] = currency_name
 			item['symbol'] = symbol

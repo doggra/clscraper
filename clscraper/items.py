@@ -2,7 +2,7 @@
 
 import scrapy
 
-class CoinscraperItem(scrapy.Item):
+class CLScraperItem(scrapy.Item):
 	_id = scrapy.Field()
 	currency_name = scrapy.Field()
 	symbol = scrapy.Field()
