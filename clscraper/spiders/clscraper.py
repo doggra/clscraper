@@ -26,6 +26,16 @@ class CLScraper(scrapy.Spider):
 		gc = pygsheets.authorize()
 		sh = gc.open("CL Data")
 
+		all_wks = sh.worksheets()
+
+		# If max worksheets limit is reached, copy all worksheets to another spreadsheet.
+		if len(all_wks) >= 200:
+			sh2 = gc.create("CL Data 2")
+
+			for wk in all_wks[1:]:
+				wk.copy_to(sh2.id)
+				sh.del_worksheet(wk)
+
 		placeholder = sh.sheet1
 
 		wks_name = datetime.datetime.now().strftime("%d/%m/%y")
